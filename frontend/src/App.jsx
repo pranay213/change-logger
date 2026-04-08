@@ -10,9 +10,14 @@ function App() {
   const [activeRepo, setActiveRepo] = useState(null);
   const [activeBranch, setActiveBranch] = useState('');
   const [branches, setBranches] = useState([]);
+  const [branchSearch, setBranchSearch] = useState('');
   const [activeTab, setActiveTab] = useState('commits');
   const [isDownloading, setIsDownloading] = useState(false);
   const [isLoadingBranches, setIsLoadingBranches] = useState(false);
+
+  const filteredBranches = branches.filter(b => 
+    b.toLowerCase().includes(branchSearch.toLowerCase())
+  );
 
   const cleanRepoUrl = (input) => {
     let cleanedRepo = input.trim();
@@ -28,6 +33,7 @@ function App() {
       setActiveRepo(cleanedRepo);
       setRepoInput(cleanedRepo);
       setActiveBranch('');
+      setBranchSearch('');
       localStorage.setItem('github_token', githubToken);
       
       try {
@@ -123,26 +129,55 @@ function App() {
       </form>
 
       {activeRepo && branches.length > 0 && (
-        <div className="branch-selector" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem'}}>
-          <GitBranch size={16} color="var(--primary)" />
-          <span style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>Branch:</span>
-          <select 
-            value={activeBranch} 
-            onChange={(e) => setActiveBranch(e.target.value)}
-            style={{
-              background: '#1A1B23', // Strict dark background color for drop down menu
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              color: 'var(--text)',
-              padding: '0.4rem 0.8rem',
-              borderRadius: '0.3rem',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
-          >
-            <option value="" style={{background: '#1A1B23', color: '#fff'}}>Default Branch</option>
-            {branches.map(b => <option key={b} value={b} style={{background: '#1A1B23', color: '#fff'}}>{b}</option>)}
-          </select>
+        <div className="branch-selector" style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+            <GitBranch size={16} color="var(--primary)" />
+            <span style={{fontSize: '0.9rem', color: 'var(--text-secondary)'}}>Branch:</span>
+          </div>
+
+          <div style={{display: 'flex', gap: '0.5rem', alignItems: 'center'}}>
+            <input 
+              type="text"
+              placeholder="Search branch..."
+              value={branchSearch}
+              onChange={(e) => setBranchSearch(e.target.value)}
+              style={{
+                background: 'rgba(0, 0, 0, 0.2)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'var(--text)',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '0.3rem',
+                outline: 'none',
+                fontSize: '0.85rem'
+              }}
+            />
+
+            <select 
+              value={activeBranch} 
+              onChange={(e) => setActiveBranch(e.target.value)}
+              style={{
+                background: '#1A1B23', // Strict dark background color for drop down menu
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: 'var(--text)',
+                padding: '0.4rem 0.8rem',
+                borderRadius: '0.3rem',
+                outline: 'none',
+                cursor: 'pointer',
+                fontSize: '0.85rem',
+                minWidth: '200px'
+              }}
+            >
+              <option value="" style={{background: '#1A1B23', color: '#fff'}}>Default Branch</option>
+              {filteredBranches.map(b => (
+                <option key={b} value={b} style={{background: '#1A1B23', color: '#fff'}}>{b}</option>
+              ))}
+            </select>
+          </div>
+          
           {isLoadingBranches && <div className="loader" style={{width: 14, height: 14, borderWidth: 2}}></div>}
+          {filteredBranches.length === 0 && branchSearch && (
+            <span style={{fontSize: '0.8rem', color: 'var(--danger)'}}>No matching branches found</span>
+          )}
         </div>
       )}
 
