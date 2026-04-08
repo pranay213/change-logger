@@ -16,6 +16,7 @@ function categorizeCommit(message) {
 
 exports.getCommits = async (req, res) => {
   let { repo, branch, page = 1, per_page = 50, limit } = req.query;
+  const githubToken = req.headers['x-github-token'];
   page = parseInt(page, 10);
   per_page = parseInt(per_page, 10);
 
@@ -44,7 +45,7 @@ exports.getCommits = async (req, res) => {
 
       while (hasMore && results.length < limit) {
         let chunkLimit = Math.min(100, limit - results.length);
-        const { commits, hasNextPage } = await githubService.getCommits(owner, name, branch, currentPage, chunkLimit);
+        const { commits, hasNextPage } = await githubService.getCommits(owner, name, branch, githubToken, currentPage, chunkLimit);
         results = results.concat(commits);
         hasMore = hasNextPage;
         currentPage++;
@@ -65,7 +66,7 @@ exports.getCommits = async (req, res) => {
   if (cached) return res.json(cached);
 
   try {
-    const data = await githubService.getCommits(owner, name, branch, page, per_page);
+    const data = await githubService.getCommits(owner, name, branch, githubToken, page, per_page);
     cacheService.set(cacheKey, data, 300); // cache page for 5 mins
     return res.json(data);
   } catch (error) {
@@ -78,6 +79,7 @@ exports.getCommits = async (req, res) => {
 
 exports.getChangelog = async (req, res) => {
   let { repo, branch } = req.query;
+  const githubToken = req.headers['x-github-token'];
 
   if (repo) {
     repo = repo.replace(/^https?:\/\/github\.com\//, '');
@@ -99,7 +101,7 @@ exports.getChangelog = async (req, res) => {
     let page = 1;
     let hasMore = true;
     while (allCommits.length < 500 && hasMore) {
-      const { commits, hasNextPage } = await githubService.getCommits(owner, name, branch, page, 100);
+      const { commits, hasNextPage } = await githubService.getCommits(owner, name, branch, githubToken, page, 100);
       allCommits = allCommits.concat(commits);
       hasMore = hasNextPage;
       page++;
@@ -232,6 +234,7 @@ exports.createChangelogFile = (req, res) => {
 
 exports.getBranches = async (req, res) => {
   let { repo } = req.query;
+  const githubToken = req.headers['x-github-token'];
   
   if (repo) {
     repo = repo.replace(/^https?:\/\/github\.com\//, '');
@@ -248,7 +251,7 @@ exports.getBranches = async (req, res) => {
   if (cached) return res.json({ branches: cached });
 
   try {
-    const branches = await githubService.getBranches(owner, name);
+    const branches = await githubService.getBranches(owner, name, githubToken);
     cacheService.set(cacheKey, branches, 300);
     return res.json({ branches });
   } catch (error) {

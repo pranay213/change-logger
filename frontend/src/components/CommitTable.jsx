@@ -3,7 +3,7 @@ import { fetchCommits } from '../services/api';
 import dayjs from 'dayjs';
 import { ExternalLink } from 'lucide-react';
 
-const CommitTable = ({ repo, branch }) => {
+const CommitTable = ({ repo, branch, githubToken }) => {
   const [commits, setCommits] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,13 +17,13 @@ const CommitTable = ({ repo, branch }) => {
     setHasMore(true);
     setError(null);
     loadCommits(1, true);
-  }, [repo, branch]);
+  }, [repo, branch, githubToken]);
 
   const loadCommits = async (currentPage, isReset = false) => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchCommits(repo, branch, currentPage);
+      const data = await fetchCommits(repo, branch, githubToken, currentPage);
       
       setCommits(prev => isReset ? data.commits : [...prev, ...data.commits]);
       setHasMore(data.hasNextPage);

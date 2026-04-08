@@ -6,6 +6,7 @@ import ChangelogGenerator from './components/ChangelogGenerator';
 
 function App() {
   const [repoInput, setRepoInput] = useState('');
+  const [githubToken, setGithubToken] = useState(localStorage.getItem('github_token') || '');
   const [activeRepo, setActiveRepo] = useState(null);
   const [activeBranch, setActiveBranch] = useState('');
   const [branches, setBranches] = useState([]);
@@ -27,10 +28,11 @@ function App() {
       setActiveRepo(cleanedRepo);
       setRepoInput(cleanedRepo);
       setActiveBranch('');
+      localStorage.setItem('github_token', githubToken);
       
       try {
         setIsLoadingBranches(true);
-        const fetchedBranches = await fetchBranches(cleanedRepo);
+        const fetchedBranches = await fetchBranches(cleanedRepo, githubToken);
         setBranches(fetchedBranches);
       } catch (err) {
         console.error('Failed to fetch branches', err);
@@ -51,8 +53,9 @@ function App() {
     }
     try {
       setIsDownloading(true);
+      localStorage.setItem('github_token', githubToken);
       // Generates the file dynamically directly in the backend
-      await fetchChangelog(cleanedRepo, activeBranch);
+      await fetchChangelog(cleanedRepo, activeBranch, githubToken);
       
       // Auto-trigger the download by opening the static public path
       const link = document.createElement('a');
@@ -76,13 +79,34 @@ function App() {
       </header>
 
       <form className="search-container" onSubmit={handleSearch}>
-        <input
-          type="text"
-          className="search-input"
-          placeholder="fb55/htmlparser2 or facebook/react"
-          value={repoInput}
-          onChange={(e) => setRepoInput(e.target.value)}
-        />
+        <div className="search-group">
+          <label htmlFor="repo">Repository</label>
+          <div className="input-with-icon">
+            <Search size={18} />
+            <input 
+              id="repo"
+              type="text" 
+              placeholder="e.g. facebook/react" 
+              value={repoInput}
+              onChange={(e) => setRepoInput(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="search-group" style={{ flex: '0 0 250px' }}>
+          <label htmlFor="token">GitHub PAT (Optional)</label>
+          <div className="input-with-icon">
+            <GitBranch size={18} />
+            <input 
+              id="token"
+              type="password" 
+              placeholder="ghp_xxxxxxxxxxxx" 
+              value={githubToken}
+              onChange={(e) => setGithubToken(e.target.value)}
+            />
+          </div>
+        </div>
+
         <button type="submit" className="btn btn-primary">
           <Search size={18} />
           Explore
@@ -141,9 +165,9 @@ function App() {
 
           <div className="glass-panel" style={{ padding: '2rem' }}>
             {activeTab === 'commits' ? (
-              <CommitTable repo={activeRepo} branch={activeBranch} />
+              <CommitTable repo={activeRepo} branch={activeBranch} githubToken={githubToken} />
             ) : (
-              <ChangelogGenerator repo={activeRepo} branch={activeBranch} />
+              <ChangelogGenerator repo={activeRepo} branch={activeBranch} githubToken={githubToken} />
             )}
           </div>
         </>

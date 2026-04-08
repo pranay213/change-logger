@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchChangelog } from '../services/api';
 import { Copy, Check } from 'lucide-react';
 
-const ChangelogGenerator = ({ repo, branch }) => {
+const ChangelogGenerator = ({ repo, branch, githubToken }) => {
   const [changelogStr, setChangelogStr] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -10,13 +10,13 @@ const ChangelogGenerator = ({ repo, branch }) => {
 
   useEffect(() => {
     loadChangelog();
-  }, [repo, branch]);
+  }, [repo, branch, githubToken]);
 
   const loadChangelog = async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await fetchChangelog(repo, branch);
+      const data = await fetchChangelog(repo, branch, githubToken);
       
       // Generate the TS array format utilizing the data from backend
       const tsCode = `const versionsFrontend: ChangelogVersionType[] = [\n${data.map(v => `  {
