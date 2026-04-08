@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: change_logger_backend
+    ports:
+      - "3001:3001"
+    environment:
+      # Inject the GitHub Token safely using an external .env file so it never goes into docker-compose
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - ./backend/public:/app/public
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      # Automatically pass the custom frontend IP setup arg down to Vite
+      args:
+        - VITE_API_URL=${FRONTEND_VITE_API_URL:-http://localhost:3001/api}
+    container_name: change_logger_frontend
+    ports:
+      - "80:80"
+    restart: unless-stopped
+    depends_on:
+      - backend
