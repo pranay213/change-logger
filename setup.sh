@@ -54,8 +54,8 @@ echo ""
 
 # 5. Build and deploy using Docker Compose
 echo "Starting Docker Build Process..."
-docker-compose build --no-cache
-docker-compose up -d
+docker compose build --no-cache
+docker compose up -d
 
 echo ""
 echo "========================================="
